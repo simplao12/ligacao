@@ -76,7 +76,7 @@ function StepCode({ code, setCode, next }) {
   const [touched, setTouched] = useState(false);
   const [checking, setChecking] = useState(false);
   const [dbValid, setDbValid] = useState(false);
-  const formatValid = /^S\d{7}$/i.test(code);
+  const formatValid = /^S[A-Z0-9]{7}$/i.test(code);
 
   const onCodeChange = (v) => setCode(v.toUpperCase().replace(/\s+/g, "").slice(0, 8));
 
@@ -599,7 +599,7 @@ function App() {
 
   // Auto-skip step 1 if code is in URL
   useEffect(() => {
-    if (/^S\d{7}$/.test(code) && step === 0 && getQuery("codigo")) {
+    if (/^S[A-Z0-9]{7}$/i.test(code) && step === 0 && getQuery("codigo")) {
       setStep(1);
     }
     // eslint-disable-next-line
@@ -609,7 +609,7 @@ function App() {
   // so the TV app can fetch it via GET /api/devices/:code
   useEffect(() => {
     if (step !== 3) return;
-    if (!/^S\d{7}$/.test(code)) return;
+    if (!/^S[A-Z0-9]{7}$/i.test(code)) return;
 
     const body = {
       name: creds.name || (source === 'xtream' ? 'Lista Xtream' : source === 'm3u' ? 'Lista M3U' : 'Lista enviada'),
