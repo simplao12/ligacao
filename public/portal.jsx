@@ -591,14 +591,14 @@ function StepSuccess({ code, source, creds, reset, isEditing }) {
 }
 
 // ============ Playlist Manager ============
-function PlaylistManager({ code, onAddNew, onEdit, onLogout }) {
+function PlaylistManager({ code, onAddNew, onEdit, onLogout, refreshKey }) {
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
     loadPlaylists();
-  }, [code]);
+  }, [code, refreshKey]);
 
   const loadPlaylists = async () => {
     try {
@@ -729,6 +729,7 @@ function App() {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [editingPlaylist, setEditingPlaylist] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Auto-skip step 1 if code is in URL
   useEffect(() => {
@@ -778,6 +779,10 @@ function App() {
           console.warn('[portal] backend retornou erro', r.status, respText);
         } else {
           console.log('[portal] ' + (isUpdate ? 'lista atualizada com sucesso' : 'pareamento registrado com sucesso'));
+          // Force PlaylistManager to reload
+          if (isUpdate) {
+            setRefreshKey(k => k + 1);
+          }
         }
       } catch (e) {
         console.error('[portal] falha ao fazer requisição:', e);
@@ -882,6 +887,7 @@ function App() {
             onAddNew={handleAddNewList}
             onEdit={handleEditList}
             onLogout={() => setStep(0)}
+            refreshKey={refreshKey}
           />
         )}
         {step === 2 && (
