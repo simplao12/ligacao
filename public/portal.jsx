@@ -74,8 +74,34 @@ function Stepper({ steps, current }) {
 // ============ Step 1: Code ============
 function StepCode({ code, setCode, next }) {
   const [touched, setTouched] = useState(false);
-  const valid = /^S\d{7}$/i.test(code);
+  const [checking, setChecking] = useState(false);
+  const [dbValid, setDbValid] = useState(false);
+  const formatValid = /^S\d{7}$/i.test(code);
+
   const onCodeChange = (v) => setCode(v.toUpperCase().replace(/\s+/g, "").slice(0, 8));
+
+  // Verify code exists in database
+  useEffect(() => {
+    if (!formatValid) {
+      setDbValid(false);
+      return;
+    }
+
+    setChecking(true);
+    fetch(`${API_BASE}/devices/${code}`)
+      .then(r => {
+        setDbValid(r.ok);
+        setChecking(false);
+      })
+      .catch(() => {
+        setDbValid(false);
+        setChecking(false);
+      });
+  }, [code, formatValid]);
+
+  const valid = formatValid && dbValid;
+  const error = touched && formatValid && !dbValid && !checking ? 'Código não encontrado' :
+                touched && !formatValid ? 'Formato inválido' : null;
 
   return (
     <div className="card">
@@ -100,19 +126,21 @@ function StepCode({ code, setCode, next }) {
             inputMode="text"
             spellCheck="false"
           />
-          {valid && (
+          {checking ? (
+            <div style={{ position: 'absolute', right: 16, width: 20, height: 20 }}>
+              <span className="spin" style={{ color: 'var(--accent)' }} />
+            </div>
+          ) : valid ? (
             <div className="code-ok">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3ecf8e" strokeWidth="3">
                 <path d="m5 12 5 5L20 7" />
               </svg>
             </div>
-          )}
+          ) : null}
         </div>
         <div className="field-hint">
           Letra <b style={{ color: "var(--accent)" }}>S</b> seguida de 7 dígitos numéricos.
-          {touched && !valid && (
-            <span className="err-msg"> · Formato inválido</span>
-          )}
+          {error && <span className="err-msg"> · {error}</span>}
         </div>
       </label>
 
@@ -123,9 +151,18 @@ function StepCode({ code, setCode, next }) {
         </div>
       </div>
 
-      <button className="btn-primary" disabled={!valid} onClick={() => valid && next()}>
-        Continuar
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14m-7-7 7 7-7 7" /></svg>
+      <button className="btn-primary" disabled={!valid || checking} onClick={() => valid && next()}>
+        {checking ? (
+          <>
+            <span className="spin" style={{ width: 14, height: 14 }} />
+            Verificando…
+          </>
+        ) : (
+          <>
+            Continuar
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14m-7-7 7 7-7 7" /></svg>
+          </>
+        )}
       </button>
     </div>
   );
