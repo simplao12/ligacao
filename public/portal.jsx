@@ -513,7 +513,7 @@ function FileDrop({ fileName, onPick, onRemove }) {
 }
 
 // ============ Step 4: Success ============
-function StepSuccess({ code, source, creds, reset }) {
+function StepSuccess({ code, source, creds, reset, isEditing }) {
   const [tvDetected, setTvDetected] = useState(false);
   useEffect(() => {
     // Optimistically show "detected" after a brief delay so the user sees the chain working
@@ -528,9 +528,9 @@ function StepSuccess({ code, source, creds, reset }) {
           <path d="m5 12 5 5L20 7" />
         </svg>
       </div>
-      <h2 style={{ textAlign: "center", marginTop: 0, fontSize: 30 }}>TV ativada com sucesso!</h2>
+      <h2 style={{ textAlign: "center", marginTop: 0, fontSize: 30 }}>{isEditing ? "Lista atualizada!" : "TV ativada com sucesso!"}</h2>
       <p className="muted" style={{ textAlign: "center", maxWidth: 420, margin: "10px auto 28px" }}>
-        Seu aplicativo STVBR na TV vai entrar automaticamente em alguns segundos com sua lista cadastrada.
+        {isEditing ? "Suas credenciais foram atualizadas com sucesso." : "Seu aplicativo STVBR na TV vai entrar automaticamente em alguns segundos com sua lista cadastrada."}
       </p>
 
       <div className={"tv-status " + (tvDetected ? "ok" : "waiting")}>
@@ -574,16 +574,148 @@ function StepSuccess({ code, source, creds, reset }) {
         </div>
       </div>
 
-      <div className="success-tip">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="M12 2 4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" /></svg>
-        <div>
-          <b>Próximo passo:</b> volte para a TV. Não é preciso fechar este site — você pode adicionar mais listas a qualquer momento.
+      {!isEditing && (
+        <div className="success-tip">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="M12 2 4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" /></svg>
+          <div>
+            <b>Próximo passo:</b> volte para a TV. Não é preciso fechar este site — você pode adicionar mais listas a qualquer momento.
+          </div>
         </div>
-      </div>
+      )}
 
       <button className="btn-primary btn-block" onClick={reset}>
-        Adicionar outra lista
+        {isEditing ? "Gerenciar listas" : "Adicionar outra lista"}
       </button>
+    </div>
+  );
+}
+
+// ============ Playlist Manager ============
+function PlaylistManager({ code, onAddNew, onEdit, onLogout }) {
+  const [playlists, setPlaylists] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(null);
+
+  useEffect(() => {
+    loadPlaylists();
+  }, [code]);
+
+  const loadPlaylists = async () => {
+    try {
+      const r = await fetch(`${API_BASE}/playlists/${code}`);
+      if (r.ok) {
+        const data = await r.json();
+        setPlaylists(data.playlists || []);
+      }
+    } catch (e) {
+      console.error('Erro ao carregar listas', e);
+    }
+    setLoading(false);
+  };
+
+  const deleteList = async (id) => {
+    if (!confirm('Tem certeza que deseja deletar esta lista?')) return;
+    setDeleting(id);
+    try {
+      const r = await fetch(`${API_BASE}/playlists/${code}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (r.ok) {
+        setPlaylists(playlists.filter(p => p.id !== id));
+      }
+    } catch (e) {
+      console.error('Erro ao deletar', e);
+    }
+    setDeleting(null);
+  };
+
+  return (
+    <div className="card">
+      <div className="card-head">
+        <div className="kicker">GERENCIADOR</div>
+        <h2>Suas listas cadastradas</h2>
+        <p className="muted">Código: <b style={{ color: 'var(--accent)' }}>{code}</b></p>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <span className="spin" style={{ color: 'var(--accent)' }} />
+        </div>
+      ) : playlists.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-2)' }}>
+          <p>Nenhuma lista cadastrada</p>
+          <p style={{ fontSize: '12px', marginTop: '8px' }}>Comece adicionando uma nova lista</p>
+        </div>
+      ) : (
+        <div style={{ marginBottom: '24px' }}>
+          {playlists.map((p) => (
+            <div
+              key={p.id}
+              style={{
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid var(--border)',
+                borderRadius: '10px',
+                padding: '14px',
+                marginBottom: '10px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)' }}>{p.name}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-2)', marginTop: '4px' }}>
+                  {p.kind === 'xtream' ? `Xtream: ${p.host}` : `M3U: ${p.url}`}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginLeft: '12px' }}>
+                <button
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => onEdit(p)}
+                >
+                  Editar
+                </button>
+                <button
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    background: 'rgba(224,22,43,0.15)',
+                    border: '1px solid rgba(224,22,43,0.3)',
+                    color: 'var(--accent)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                  }}
+                  disabled={deleting === p.id}
+                  onClick={() => deleteList(p.id)}
+                >
+                  {deleting === p.id ? '...' : 'Deletar'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+        {playlists.length < 3 && (
+          <button className="btn-primary" style={{ flex: 1 }} onClick={onAddNew}>
+            + Adicionar nova lista
+          </button>
+        )}
+        <button className="btn-ghost" style={{ flex: playlists.length < 3 ? 1 : undefined }} onClick={onLogout}>
+          Sair
+        </button>
+      </div>
     </div>
   );
 }
@@ -596,6 +728,7 @@ function App() {
   const [creds, setCreds] = useState({ name: "" });
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const [editingPlaylist, setEditingPlaylist] = useState(null);
 
   // Auto-skip step 1 if code is in URL
   useEffect(() => {
@@ -608,7 +741,7 @@ function App() {
   // When activation succeeds, register the pairing on the backend
   // so the TV app can fetch it via GET /api/devices/:code
   useEffect(() => {
-    if (step !== 3) return;
+    if (step !== 4) return;
     if (!/^S[A-Z0-9]{7}$/i.test(code)) return;
 
     const body = {
@@ -623,25 +756,28 @@ function App() {
       content: source === 'upload' ? creds.fileContent : undefined,
     };
 
+    const isUpdate = !!editingPlaylist;
+    const endpoint = isUpdate ? `/api/playlists/${code}` : `/api/devices/${code}`;
+    const method = isUpdate ? 'PUT' : 'POST';
+    const payload = isUpdate ? { ...body, id: editingPlaylist.id } : body;
+
     (async () => {
       try {
-        const r = await fetch(`${API_BASE}/devices/${code}`, {
-          method: 'POST',
+        const r = await fetch(`${API_BASE}${endpoint}`, {
+          method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify(payload),
         });
         if (!r.ok) {
           console.warn('[portal] backend retornou', r.status);
         } else {
-          console.log('[portal] pareamento registrado com sucesso');
+          console.log('[portal] ' + (isUpdate ? 'lista atualizada com sucesso' : 'pareamento registrado com sucesso'));
         }
       } catch (e) {
         console.error('[portal] falha ao registrar pareamento:', e);
-        // Não bloqueia o usuário — a tela de sucesso ainda aparece
-        // e ele pode digitar o código manualmente na TV
       }
     })();
-  }, [step, code, source, creds]);
+  }, [step, code, source, creds, editingPlaylist]);
 
   const runTest = () => {
     setTesting(true);
@@ -669,7 +805,31 @@ function App() {
     }, 1400);
   };
 
+  const handleAddNewList = () => {
+    setEditingPlaylist(null);
+    setSource("xtream");
+    setCreds({ name: "" });
+    setStep(2);
+  };
+
+  const handleEditList = (playlist) => {
+    setEditingPlaylist(playlist);
+    setSource(playlist.kind);
+    setCreds({
+      name: playlist.name,
+      host: playlist.host,
+      user: playlist.username,
+      pass: playlist.password,
+      m3uUrl: playlist.url,
+      epgUrl: playlist.epg_url,
+      fileName: undefined,
+      fileContent: undefined,
+    });
+    setStep(3);
+  };
+
   const reset = () => {
+    setEditingPlaylist(null);
     setStep(1);
     setSource("xtream");
     setCreds({ name: "" });
@@ -700,36 +860,46 @@ function App() {
           </p>
         </div>
 
-        <Stepper
-          steps={["Código", "Tipo", "Credenciais", "Concluído"]}
-          current={step}
-        />
+        {step > 0 && step < 4 && (
+          <Stepper
+            steps={editingPlaylist ? ["Tipo", "Credenciais", "Concluído"] : ["Tipo", "Credenciais", "Concluído"]}
+            current={step - 2}
+          />
+        )}
 
         {step === 0 && (
           <StepCode code={code} setCode={setCode} next={() => setStep(1)} />
         )}
         {step === 1 && (
-          <StepSource
-            source={source}
-            setSource={setSource}
-            next={() => setStep(2)}
-            back={() => setStep(0)}
+          <PlaylistManager
+            code={code}
+            onAddNew={handleAddNewList}
+            onEdit={handleEditList}
+            onLogout={() => setStep(0)}
           />
         )}
         {step === 2 && (
+          <StepSource
+            source={source}
+            setSource={setSource}
+            next={() => setStep(3)}
+            back={() => setStep(1)}
+          />
+        )}
+        {step === 3 && (
           <StepCredentials
             source={source}
             creds={creds}
             setCreds={setCreds}
-            next={() => setStep(3)}
-            back={() => setStep(1)}
+            next={() => setStep(4)}
+            back={() => setStep(editingPlaylist ? 3 : 2)}
             testing={testing}
             testResult={testResult}
             runTest={runTest}
           />
         )}
-        {step === 3 && (
-          <StepSuccess code={code} source={source} creds={creds} reset={reset} />
+        {step === 4 && (
+          <StepSuccess code={code} source={source} creds={creds} reset={reset} isEditing={!!editingPlaylist} />
         )}
 
         <section id="help" className="help">
