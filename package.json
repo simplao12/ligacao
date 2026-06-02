@@ -2,6 +2,7 @@
   "name": "stvbr-vercel",
   "version": "2.0.0",
   "private": true,
+  "type": "module",
   "description": "Portal de cadastro IPTV + API de pareamento seguro — pronto para deploy no Vercel.",
   "engines": {
     "node": ">=20"
