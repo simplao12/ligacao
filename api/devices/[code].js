@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       const device = await getDevice(code);
 
       if (!device) {
-        return res.status(200).json({ authed: false });
+        return res.status(404).json({ error: 'code_not_found', authed: false });
       }
 
       if (!device.activated) {
