@@ -757,11 +757,11 @@ function App() {
     };
 
     const isUpdate = !!editingPlaylist;
-    const endpoint = isUpdate ? `/api/playlists/${code}` : `/api/devices/${code}`;
+    const endpoint = isUpdate ? `/playlists/${code}` : `/devices/${code}`;
     const method = isUpdate ? 'PUT' : 'POST';
     const payload = isUpdate ? { ...body, id: editingPlaylist.id } : body;
 
-    console.log('[portal] enviando', method, endpoint);
+    console.log('[portal] enviando', method, API_BASE + endpoint);
     console.log('[portal] isUpdate:', isUpdate, 'editingPlaylist:', editingPlaylist);
     console.log('[portal] payload:', JSON.stringify(payload, null, 2));
 
