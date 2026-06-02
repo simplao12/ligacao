@@ -244,7 +244,7 @@ function StepSource({ source, setSource, next, back }) {
 }
 
 // ============ Step 3: Credentials ============
-function StepCredentials({ source, creds, setCreds, next, back, testing, testResult, runTest }) {
+function StepCredentials({ source, creds, setCreds, next, back, testing, testResult, runTest, isEditing }) {
   const upd = (k, v) => setCreds({ ...creds, [k]: v });
 
   const xtreamValid =
@@ -257,7 +257,7 @@ function StepCredentials({ source, creds, setCreds, next, back, testing, testRes
   return (
     <div className="card">
       <div className="card-head">
-        <div className="kicker">PASSO 3 DE 4</div>
+        <div className="kicker">{isEditing ? "EDITAR" : "PASSO 3 DE 4"}</div>
         <h2>
           {source === "xtream"
             ? "Dados Xtream Codes"
@@ -266,7 +266,7 @@ function StepCredentials({ source, creds, setCreds, next, back, testing, testRes
             : "Enviar arquivo M3U"}
         </h2>
         <p className="muted">
-          Suas credenciais são criptografadas com TLS 1.3 e nunca trafegam pela sua TV.
+          {isEditing ? "Atualize suas credenciais abaixo" : "Suas credenciais são criptografadas com TLS 1.3 e nunca trafegam pela sua TV."}
         </p>
       </div>
 
@@ -420,7 +420,7 @@ function StepCredentials({ source, creds, setCreds, next, back, testing, testRes
           Voltar
         </button>
         <button className="btn-primary" onClick={next} disabled={!valid}>
-          Ativar TV
+          {isEditing ? "Salvar alterações" : "Ativar TV"}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14m-7-7 7 7-7 7" /></svg>
         </button>
       </div>
@@ -896,6 +896,7 @@ function App() {
             testing={testing}
             testResult={testResult}
             runTest={runTest}
+            isEditing={!!editingPlaylist}
           />
         )}
         {step === 4 && (
