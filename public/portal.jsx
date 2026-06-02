@@ -139,7 +139,7 @@ function StepCode({ code, setCode, next }) {
           ) : null}
         </div>
         <div className="field-hint">
-          Letra <b style={{ color: "var(--accent)" }}>S</b> seguida de 7 dígitos numéricos.
+          Letra <b style={{ color: "var(--accent)" }}>S</b> seguida de 7 caracteres (letras ou números).
           {error && <span className="err-msg"> · {error}</span>}
         </div>
       </label>
