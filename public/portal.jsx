@@ -761,6 +761,10 @@ function App() {
     const method = isUpdate ? 'PUT' : 'POST';
     const payload = isUpdate ? { ...body, id: editingPlaylist.id } : body;
 
+    console.log('[portal] enviando', method, endpoint);
+    console.log('[portal] isUpdate:', isUpdate, 'editingPlaylist:', editingPlaylist);
+    console.log('[portal] payload:', JSON.stringify(payload, null, 2));
+
     (async () => {
       try {
         const r = await fetch(`${API_BASE}${endpoint}`, {
@@ -768,13 +772,15 @@ function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
+        const respText = await r.text();
+        console.log('[portal]', method, endpoint, 'status:', r.status, 'response:', respText);
         if (!r.ok) {
-          console.warn('[portal] backend retornou', r.status);
+          console.warn('[portal] backend retornou erro', r.status, respText);
         } else {
           console.log('[portal] ' + (isUpdate ? 'lista atualizada com sucesso' : 'pareamento registrado com sucesso'));
         }
       } catch (e) {
-        console.error('[portal] falha ao registrar pareamento:', e);
+        console.error('[portal] falha ao fazer requisição:', e);
       }
     })();
   }, [step, code, source, creds, editingPlaylist]);

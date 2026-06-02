@@ -47,17 +47,21 @@ export default async function handler(req, res) {
 
     // ─── PUT: Update playlist ───────────────────────────────────
     if (req.method === 'PUT') {
+      console.log('[api/playlists] PUT received. body:', JSON.stringify(req.body, null, 2));
       const { id, ...playlistData } = req.body || {};
 
       if (!id) {
+        console.log('[api/playlists] missing id in body');
         return res.status(400).json({ error: 'missing_id', message: 'ID da playlist é obrigatório' });
       }
 
       const err = validatePlaylistData(playlistData);
       if (err) {
+        console.log('[api/playlists] validation error:', err);
         return res.status(400).json({ error: err });
       }
 
+      console.log('[api/playlists] updating playlist', id, 'for code', code);
       await updatePlaylist(code, id, playlistData);
       return res.status(200).json({
         ok: true,
