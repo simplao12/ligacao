@@ -16,12 +16,14 @@ npm install
 
 ### 2. Configurar banco de dados local (opcional)
 
-Se quiser testar com um Postgres local:
+Se quiser testar com um Postgres local, crie um arquivo de ambiente no projeto:
 
 ```bash
 # Criar .env.local com sua DATABASE_URL
 echo "DATABASE_URL=postgresql://user:pass@localhost/stvbr" > .env.local
 ```
+
+O projeto lê automaticamente `.env.local` ou `.env` antes de iniciar.
 
 Se não configurar, o app usa storage em memória (apenas para dev).
 
@@ -70,11 +72,12 @@ No painel do Vercel:
 Após criar o banco:
 
 ```bash
-# No painel Vercel, vá a: Settings → Functions → Serverless Function Logs
-# Ou via CLI:
-vercel env pull  # Puxa as env vars
+# Puxe as env vars do Vercel para .env.local
+npx vercel env pull .env.local
 npm run setup-db  # Cria as tabelas
 ```
+
+Se você já tiver `DATABASE_URL` em `.env.local`, `npm run setup-db` vai usar essa conexão.
 
 Ou na primeira requisição a qualquer endpoint, ele tenta criar automaticamente (graceful).
 

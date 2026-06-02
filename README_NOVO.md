@@ -54,8 +54,12 @@ npm install
 ### 2. Setup local (opcional)
 
 ```bash
-# Com BD local
+# Com BD local ou remoto via Vercel/Supabase
 echo "DATABASE_URL=postgresql://..." > .env.local
+npm run setup-db
+
+# Ou puxe do Vercel para .env.local
+npx vercel env pull .env.local
 npm run setup-db
 
 # Ou apenas em memória (dev)

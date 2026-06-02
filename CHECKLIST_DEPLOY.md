@@ -137,7 +137,7 @@ npm run setup-db
 
 - [ ] Setup no Vercel (via CLI)
   ```bash
-  vercel env pull
+  npx vercel env pull .env.local
   npm run setup-db
   ```
 
